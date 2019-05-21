@@ -118,6 +118,7 @@ def test_peer_connection_failure():
 
         future = peer.connect()
         with pytest.raises(ZeroDivisionError) as excinfo:
+            yield
             yield future
 
         assert 'great sadness' in str(excinfo)

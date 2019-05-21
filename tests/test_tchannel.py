@@ -33,7 +33,7 @@ import psutil
 import pytest
 import tornado
 
-from mock import MagicMock, patch, ANY
+from mock import MagicMock, patch, ANY, DEFAULT
 from tornado import gen
 from tornado.netutil import bind_sockets
 from tornado.tcpserver import TCPServer
@@ -423,13 +423,20 @@ def test_advertise_is_retryable(router_file):
         f = gen.Future()
         f.set_exception(Exception('great sadness'))
         mock_advertise.return_value = f
-
+        # from tornado.ioloop import IOLoop
         with pytest.raises(Exception) as e:
             yield tchannel.advertise(router_file=router_file)
+        # for f in IOLoop.current()._callbacks:
+        #     try:
+        #         r = f()
+        #         print(r.had_exception, r.result_future)
+        #     except:
+        #         pass
         assert 'great sadness' in str(e)
         assert mock_advertise.call_count == 1
-
+        yield
         mock_advertise.side_effect = new_advertise
+        # yield  # Wait for next ioloop step.
         yield tchannel.advertise(router_file=router_file)
         yield tchannel.advertise(router_file=router_file)
         yield tchannel.advertise(router_file=router_file)
